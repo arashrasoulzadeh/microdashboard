@@ -1,0 +1,11 @@
+# Binary
+microdashboard
+
+# Database files
+*.db
+*.sqlite
+data/
+
+# Go
+*.exe
+*.test
