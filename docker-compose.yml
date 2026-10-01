@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports: ["80:80", "443:443"]
+    environment:
+      - ADMIN_TOKEN=change_me
+      - LETSENCRYPT_EMAIL=you@example.com
+    volumes:
+      - ./data:/etc/microdashboard/data
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+
+  # Uncomment if using Let's Encrypt with a real domain
+  # certbot:
+  #   image: certbot/certbot
+  #   volumes:
+  #     - certbot_conf:/etc/letsencrypt
+  #     - certbot_webroot:/var/www/certbot
+  #   entrypoint: "/bin/sh -c 'trap exit TERM; while true; do certbot renew; sleep 12h & wait; done'"
+  #   environment:
+  #     - DOMAINS=${PUBLIC_DOMAIN}
+  #   depends_on:
+  #     - api
+
+volumes:
+  # certbot_conf:
+  #   driver: local
+  # certbot_webroot:
+  #   driver: local
