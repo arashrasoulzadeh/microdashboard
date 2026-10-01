@@ -10,12 +10,15 @@
 - [x] Docker Compose setup (api + mosquitto + sqlite)
 - [x] **Commit & push after Phase 1 complete** ✅
 
-## Phase 2: Dashboard JSON Definition
-- [ ] Dashboard JSON schema (width, height, refresh_interval, widgets array)
-- [ ] Dashboard CRUD endpoints (`GET/POST/PUT/DELETE /dashboards`)
-- [ ] Dashboard validation & persistence
-- [ ] Rendered dashboard snapshot endpoint (`GET /dashboards/{id}`)
-- [ ] **Commit & push after Phase 2 complete**
+## Phase 2: Dashboard JSON Definition ✅ (complete)
+- [x] Dashboard JSON schema (width, height, refresh_interval, widgets array)
+- [x] Dashboard CRUD endpoints (`GET/POST/PUT/DELETE /dashboards`)
+- [x] Dashboard validation & persistence
+- [x] Rendered dashboard snapshot endpoint (`GET /dashboards/{id}/render`)
+- [x] Widget types: gauge, sparkline, status, numeric, progress, text
+- [x] Data source expressions: `${latency:<monitor_id>}`, `${metric:<device_id>.<metric_name>}`
+- [x] Text widget template replacement
+- [x] **Commit & push after Phase 2 complete** ✅
 
 ## Phase 3: Management UI
 - [ ] Static web app (HTMX or React) served from `/ui/`

@@ -56,6 +56,9 @@ func (m *Monitor) checkAll() {
 	for _, mon := range rows {
 		result := m.checkOne(mon.ID, mon.URL, mon.Method, mon.Timeout)
 		m.store.InsertMetric("", result.ID, int(result.ElapsedMs), result.Status, result.BodyBytes)
+		if result.Error == nil {
+			m.store.UpdateMonitorResult(result.ID, result.ElapsedMs, result.Status)
+		}
 
 		if result.Error != nil {
 			log.Printf("monitor %s error: %v", result.ID, result.Error)

@@ -198,6 +198,12 @@ func (s *Store) GetAllMonitors() ([]MonitorRow, error) {
 	return results, nil
 }
 
+func (s *Store) UpdateMonitorResult(id string, elapsedMs int64, status int) error {
+	now := time.Now().Unix()
+	_, err := s.db.Exec(`UPDATE latency_monitors SET last_elapsed_ms = ?, last_status = ?, last_checked = ? WHERE id = ?`, elapsedMs, status, now, id)
+	return err
+}
+
 type MonitorRow struct {
 	ID         string
 	URL        string
@@ -219,6 +225,26 @@ func (s *Store) InsertMetric(deviceID, targetID string, elapsedMS, status, bodyB
 
 func (s *Store) GetMetrics(limit int) ([]MetricRow, error) {
 	rows, err := s.db.Query(`SELECT id, device_id, target_id, elapsed_ms, status, body_bytes, checked_at FROM metrics ORDER BY checked_at DESC LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var results []MetricRow
+	for rows.Next() {
+		var r MetricRow
+		if err := rows.Scan(&r.ID, &r.DeviceID, &r.TargetID, &r.ElapsedMs, &r.Status, &r.BodyBytes, &r.CheckedAt); err != nil {
+			return nil, err
+		}
+		results = append(results, r)
+	}
+	return results, nil
+}
+
+func (s *Store) GetMetricsByDevice(deviceID string, limit int) ([]MetricRow, error) {
+	rows, err := s.db.Query(
+		`SELECT id, device_id, target_id, elapsed_ms, status, body_bytes, checked_at 
+		 FROM metrics WHERE device_id = ? ORDER BY checked_at DESC LIMIT ?`,
+		deviceID, limit)
 	if err != nil {
 		return nil, err
 	}

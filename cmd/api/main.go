@@ -18,6 +18,7 @@ import (
 	"microdashboard/internal/store"
 	"microdashboard/internal/monitor"
 	"microdashboard/internal/auth"
+	"microdashboard/internal/dashboard"
 )
 
 func main() {
@@ -52,6 +53,8 @@ func main() {
 	router.GET("/dashboards/:id", authMiddleware.Admin(dashboardGet(st)))
 	router.PUT("/dashboards/:id", authMiddleware.Admin(dashboardUpdate(st)))
 	router.DELETE("/dashboards/:id", authMiddleware.Admin(dashboardDelete(st)))
+	// Render endpoint (device key or admin token)
+	router.GET("/dashboards/:id/render", authMiddleware.HTTP(dashboardRender(st)))
 
 	// Latency monitor endpoints (admin)
 	router.GET("/monitors", authMiddleware.Admin(monitorList(st)))
@@ -159,32 +162,18 @@ func dashboardList(st *store.Store) httprouter.Handle {
 
 func dashboardCreate(st *store.Store) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		var req struct {
-			ID             string `json:"id"`
-			Name           string `json:"name"`
-			JSONDefinition string `json:"json_definition"`
-			Width          int    `json:"width"`
-			Height         int    `json:"height"`
-			RefreshInterval int   `json:"refresh_interval"`
-		}
+		var req dashboard.Dashboard
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "invalid JSON", http.StatusBadRequest)
 			return
 		}
-		if req.ID == "" || req.Name == "" || req.JSONDefinition == "" {
-			http.Error(w, "id, name, json_definition required", http.StatusBadRequest)
+		if err := dashboard.ValidateDashboard(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if req.Width == 0 {
-			req.Width = 128
-		}
-		if req.Height == 0 {
-			req.Height = 64
-		}
-		if req.RefreshInterval == 0 {
-			req.RefreshInterval = 15000
-		}
-		if err := st.UpsertDashboard(req.ID, req.Name, req.JSONDefinition, req.Width, req.Height, req.RefreshInterval); err != nil {
+		// Marshal widgets to JSON for storage
+		widgetsJSON, _ := json.Marshal(req.Widgets)
+		if err := st.UpsertDashboard(req.ID, req.Name, string(widgetsJSON), req.Width, req.Height, req.RefreshInterval); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -201,35 +190,35 @@ func dashboardGet(st *store.Store) httprouter.Handle {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		// Parse widgets from JSON
+		var dashResp dashboard.Dashboard
+		dashResp.ID = dash.ID
+		dashResp.Name = dash.Name
+		dashResp.Width = dash.Width
+		dashResp.Height = dash.Height
+		dashResp.RefreshInterval = dash.RefreshInterval
+		dashResp.CreatedAt = dash.CreatedAt
+		json.Unmarshal([]byte(dash.JSONDef), &dashResp.Widgets)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dash)
+		json.NewEncoder(w).Encode(dashResp)
 	}
 }
 
 func dashboardUpdate(st *store.Store) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		id := p.ByName("id")
-		var req struct {
-			Name           string `json:"name"`
-			JSONDefinition string `json:"json_definition"`
-			Width          int    `json:"width"`
-			Height         int    `json:"height"`
-			RefreshInterval int   `json:"refresh_interval"`
-		}
+		var req dashboard.Dashboard
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "invalid JSON", http.StatusBadRequest)
 			return
 		}
-		if req.Width == 0 {
-			req.Width = 128
+		req.ID = id // ensure ID matches
+		if err := dashboard.ValidateDashboard(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		if req.Height == 0 {
-			req.Height = 64
-		}
-		if req.RefreshInterval == 0 {
-			req.RefreshInterval = 15000
-		}
-		if err := st.UpsertDashboard(id, req.Name, req.JSONDefinition, req.Width, req.Height, req.RefreshInterval); err != nil {
+		widgetsJSON, _ := json.Marshal(req.Widgets)
+		if err := st.UpsertDashboard(id, req.Name, string(widgetsJSON), req.Width, req.Height, req.RefreshInterval); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -305,5 +294,32 @@ func metricsGet(st *store.Store) httprouter.Handle {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(metrics)
+	}
+}
+
+func dashboardRender(st *store.Store) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		id := p.ByName("id")
+		dash, err := st.GetDashboard(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		var d dashboard.Dashboard
+		d.ID = dash.ID
+		d.Name = dash.Name
+		d.Width = dash.Width
+		d.Height = dash.Height
+		d.RefreshInterval = dash.RefreshInterval
+		d.CreatedAt = dash.CreatedAt
+		json.Unmarshal([]byte(dash.JSONDef), &d.Widgets)
+
+		rendered, err := dashboard.Render(&d, st)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(rendered)
 	}
 }
