@@ -1,0 +1,34 @@
+{
+  "name": "MicroDashboard",
+  "version": "1.0.0",
+  "description": "IoT SDK for MicroDashboard - fetch and render dashboards on ESP8266/ESP32",
+  "keywords": ["iot", "dashboard", "esp8266", "esp32", "lcd", "oled", "monitoring"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microdashboard/microdashboard.git"
+  },
+  "authors": [
+    {
+      "name": "MicroDashboard Project",
+      "email": "noreply@microdashboard.local",
+      "url": "https://github.com/microdashboard"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/microdashboard/microdashboard",
+  "dependencies": [
+    {
+      "name": "bblanchon/ArduinoJson",
+      "version": "^6.21.0"
+    }
+  ],
+  "frameworks": ["arduino"],
+  "platforms": ["espressif8266", "espressif32"],
+  "examples": [
+    {
+      "name": "BasicDashboard",
+      "path": "examples/BasicDashboard",
+      "description": "Basic dashboard fetch and render on SSD1306 OLED"
+    }
+  ]
+}

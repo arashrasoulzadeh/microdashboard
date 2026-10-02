@@ -1,0 +1,46 @@
+#######################################
+# Syntax Coloring Map For MicroDashboard
+#######################################
+
+# Datatypes (KEYWORD1)
+MicroDashboard	KEYWORD1
+DashboardConfig	KEYWORD1
+RenderedDashboard	KEYWORD1
+WidgetConfig	KEYWORD1
+RenderedWidget	KEYWORD1
+
+# Methods and Functions (KEYWORD2)
+begin	KEYWORD2
+fetchDashboard	KEYWORD2
+fetchRenderedDashboard	KEYWORD2
+freeDashboard	KEYWORD2
+freeRenderedDashboard	KEYWORD2
+renderWidget	KEYWORD2
+renderWidgetGauge	KEYWORD2
+renderWidgetNumeric	KEYWORD2
+renderWidgetStatus	KEYWORD2
+renderWidgetProgress	KEYWORD2
+renderWidgetText	KEYWORD2
+renderWidgetSparkline	KEYWORD2
+setInsecure	KEYWORD2
+setTimeout	KEYWORD2
+isConnected	KEYWORD2
+getServerUrl	KEYWORD2
+getApiKey	KEYWORD2
+getLastError	KEYWORD2
+
+# Constants (LITERAL1)
+WIDGET_GAUGE	LITERAL1
+WIDGET_SPARKLINE	LITERAL1
+WIDGET_STATUS	LITERAL1
+WIDGET_NUMERIC	LITERAL1
+WIDGET_PROGRESS	LITERAL1
+WIDGET_TEXT	LITERAL1
+WIDGET_UNKNOWN	LITERAL1
+
+STATUS_OK	LITERAL1
+STATUS_WARN	LITERAL1
+STATUS_CRIT	LITERAL1
+STATUS_PENDING	LITERAL1
+
+MICRODASHBOARD_VERSION	LITERAL1
