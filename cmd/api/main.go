@@ -19,6 +19,7 @@ import (
 	"microdashboard/internal/monitor"
 	"microdashboard/internal/auth"
 	"microdashboard/internal/dashboard"
+	"microdashboard/internal/ui"
 )
 
 func main() {
@@ -62,6 +63,9 @@ func main() {
 
 	// Metrics endpoint (device key)
 	router.GET("/metrics", authMiddleware.HTTP(metricsGet(st)))
+
+	// UI Routes
+	ui.SetupRoutes(router, st, authMiddleware)
 
 	// Server setup
 	srv := &http.Server{

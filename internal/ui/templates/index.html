@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>microdashboard - IoT Dashboard Manager</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="/ui/static/style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="topbar">
+            <h1>microdashboard</h1>
+            <div class="topbar-actions">
+                <span id="token-display" class="token-badge">Admin mode</span>
+                <button class="btn btn-secondary" onclick="showSection('settings')">Settings</button>
+            </div>
+        </header>
+
+        <nav class="sidebar">
+            <button class="nav-btn active" onclick="showSection('dashboards')">Dashboards</button>
+            <button class="nav-btn" onclick="showSection('devices')">Devices</button>
+            <button class="nav-btn" onclick="showSection('monitors')">Monitors</button>
+            <button class="nav-btn" onclick="showSection('settings')">Settings</button>
+        </nav>
+
+        <main class="content">
+            <!-- Dashboards Section -->
+            <section id="section-dashboards" class="section active">
+                <div class="section-header">
+                    <h2>Dashboards</h2>
+                    <button class="btn btn-primary" onclick="openDashboardModal()">+ New Dashboard</button>
+                </div>
+                <div class="table-container">
+                    <table id="dashboards-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Resolution</th>
+                                <th>Widgets</th>
+                                <th>Refresh</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Devices Section -->
+            <section id="section-devices" class="section">
+                <div class="section-header">
+                    <h2>Devices</h2>
+                    <button class="btn btn-primary" onclick="openDeviceModal()">+ Register Device</button>
+                </div>
+                <div class="table-container">
+                    <table id="devices-table">
+                        <thead>
+                            <tr>
+                                <th>Device ID</th>
+                                <th>Dashboard</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Monitors Section -->
+            <section id="section-monitors" class="section">
+                <div class="section-header">
+                    <h2>Latency Monitors</h2>
+                    <button class="btn btn-primary" onclick="openMonitorModal()">+ Add Monitor</button>
+                </div>
+                <div class="table-container">
+                    <table id="monitors-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>URL</th>
+                                <th>Method</th>
+                                <th>Timeout</th>
+                                <th>Last Latency</th>
+                                <th>Status</th>
+                                <th>Last Check</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="section-settings" class="section">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="card">
+                        <h3>Alert Configuration</h3>
+                        <form id="alert-form" hx-post="/api/alerts" hx-target="#alert-result" hx-swap="innerHTML">
+                            <div class="form-group">
+                                <label>Webhook URL</label>
+                                <input type="url" name="webhook_url" placeholder="https://your-webhook.com/alert" class="input">
+                            </div>
+                            <div class="form-group">
+                                <label>MQTT Alert Topic</label>
+                                <input type="text" name="mqtt_topic" placeholder="md/alerts" class="input">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Alert Config</button>
+                        </form>
+                        <div id="alert-result"></div>
+                    </div>
+                    <div class="card">
+                        <h3>Admin Token</h3>
+                        <p class="muted">Current token (URL param): <code id="current-token">admin-change-me</code></p>
+                        <p class="muted">Set <code>ADMIN_TOKEN</code> env var to change.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Dashboard Modal -->
+    <div id="dashboard-modal" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="dash-modal-title">New Dashboard</h3>
+                <button class="modal-close" onclick="closeDashboardModal()">&times;</button>
+            </div>
+            <form id="dashboard-form" hx-post="/api/dashboards" hx-target="#dash-result" hx-swap="innerHTML">
+                <input type="hidden" name="id" id="dash-id">
+                <div class="form-group">
+                    <label>Dashboard ID</label>
+                    <input type="text" name="id" id="dash-id-input" class="input" required>
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" id="dash-name" class="input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Width (px)</label>
+                        <input type="number" name="width" id="dash-width" class="input" value="128" min="32" max="800">
+                    </div>
+                    <div class="form-group">
+                        <label>Height (px)</label>
+                        <input type="number" name="height" id="dash-height" class="input" value="64" min="16" max="600">
+                    </div>
+                    <div class="form-group">
+                        <label>Refresh (ms)</label>
+                        <input type="number" name="refresh_interval" id="dash-refresh" class="input" value="15000" min="1000">
+                    </div>
+                </div>
+                <h4>Widgets</h4>
+                <div id="widgets-container" class="widgets-list"></div>
+                <button type="button" class="btn btn-secondary" onclick="addWidgetRow()">+ Add Widget</button>
+                <div id="dash-result"></div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Save Dashboard</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDashboardModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Device Modal -->
+    <div id="device-modal" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Register Device</h3>
+                <button class="modal-close" onclick="closeDeviceModal()">&times;</button>
+            </div>
+            <form id="device-form" hx-post="/api/devices" hx-target="#device-result" hx-swap="innerHTML">
+                <div class="form-group">
+                    <label>Device ID</label>
+                    <input type="text" name="device_id" class="input" required>
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="text" name="api_key" class="input" required>
+                    <small class="muted">Save this! Shown only once.</small>
+                </div>
+                <div class="form-group">
+                    <label>Assign Dashboard (optional)</label>
+                    <select name="dashboard_id" id="device-dashboard-select" class="input">
+                        <option value="">-- None --</option>
+                    </select>
+                </div>
+                <div id="device-result"></div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Register Device</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDeviceModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Monitor Modal -->
+    <div id="monitor-modal" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Latency Monitor</h3>
+                <button class="modal-close" onclick="closeMonitorModal()">&times;</button>
+            </div>
+            <form id="monitor-form" hx-post="/api/monitors" hx-target="#monitor-result" hx-swap="innerHTML">
+                <div class="form-group">
+                    <label>Monitor ID</label>
+                    <input type="text" name="id" class="input" required>
+                </div>
+                <div class="form-group">
+                    <label>URL</label>
+                    <input type="url" name="url" class="input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Method</label>
+                        <select name="method" class="input">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout (ms)</label>
+                        <input type="number" name="timeout" class="input" value="5000" min="100">
+                    </div>
+                </div>
+                <div id="monitor-result"></div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Add Monitor</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeMonitorModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/ui/static/app.js"></script>
+</body>
+</html>

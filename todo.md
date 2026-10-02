@@ -20,20 +20,25 @@
 - [x] Text widget template replacement
 - [x] **Commit & push after Phase 2 complete** ✅
 
-## Phase 3: Management UI
-- [ ] Static web app (HTMX or React) served from `/ui/`
-- [ ] Dashboard editor (grid layout, widget types, positions, expressions)
-- [ ] Device list + dashboard assignment per device
-- [ ] Latency monitor management
-- [ ] Alert/webhook configuration
-- [ ] **Commit & push after Phase 3 complete**
+## Phase 3: Management UI ✅ (complete)
+- [x] Static web app (HTMX-based) served from `/ui/`
+- [x] Dashboard editor (grid layout, widget types, positions, expressions)
+- [x] Device list + dashboard assignment per device
+- [x] Latency monitor management
+- [x] Alert/webhook configuration
+- [x] **Commit & push after Phase 3 complete** ✅
 
-## Phase 4: IoT SDK (deferred)
-- [ ] Arduino/ESP8266 SDK for fetching dashboard JSON
-- [ ] Widget renderer for LCD (gauge, sparkline, status, numeric, progress, text)
-- [ ] Device authentication flow
-- [ ] MQTT/CoAP integration (optional)
-- [ ] **Commit & push after Phase 4 complete**
+## Phase 4: IoT SDK ✅ (complete)
+- [x] Arduino/ESP8266 SDK for fetching dashboard JSON
+- [x] Widget renderer for LCD (gauge, sparkline, status, numeric, progress, text)
+- [x] Device authentication flow
+- [x] MQTT/CoAP integration (optional)
+- [x] **Commit & push after Phase 4 complete** ✅
+
+## Test Coverage ✅
+- [x] Unit tests for config, store, auth, monitor, dashboard packages
+- [x] Integration tests for all API endpoints
+- [x] Test coverage > 80%
 
 ## Out of Scope (Phase 1-3)
 - [ ] Grafana integration — removed per user
