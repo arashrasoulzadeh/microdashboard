@@ -35,10 +35,26 @@
 - [x] MQTT/CoAP integration (optional)
 - [x] **Commit & push after Phase 4 complete** ✅
 
-## Test Coverage ✅
-- [x] Unit tests for config, store, auth, monitor, dashboard packages
-- [x] Integration tests for all API endpoints
-- [x] Test coverage > 80%
+## Phase 5: Tests Restructure & 100% Coverage
+- [ ] Create `tests/` folder structure (unit, integration, e2e)
+- [ ] Move all existing tests from `internal/*` to `tests/unit/`
+- [ ] Add integration tests in `tests/integration/`
+- [ ] Add e2e tests in `tests/e2e/`
+- [ ] Achieve 100% test coverage (go test -cover)
+- [ ] Add coverage reports (HTML/XML)
+- [ ] **Commit & push after Phase 5 complete**
+
+## Phase 6: Complete Documentation (100%)
+- [ ] API documentation (OpenAPI/Swagger spec)
+- [ ] Architecture decision records (ADR)
+- [ ] Developer guide (CONTRIBUTING.md)
+- [ ] Deployment guide (DEPLOYMENT.md)
+- [ ] Configuration reference (CONFIG.md)
+- [ ] SDK documentation (sdk/arduino/README.md - expand)
+- [ ] Database schema documentation
+- [ ] Widget type reference
+- [ ] Expression syntax reference
+- [ ] **Commit & push after Phase 6 complete**
 
 ## Out of Scope (Phase 1-3)
 - [ ] Grafana integration — removed per user
