@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -169,7 +170,7 @@ func (s *Store) UpsertMonitor(id, url, method string, timeout int) error {
 }
 
 func (s *Store) GetMonitor(id string) (*MonitorRow, error) {
-	row := s.db.QueryRow(`SELECT id, url, method, timeout, last_elapsed_ms, last_status, last_checked FROM latency_monitors WHERE id = ?`, id)
+	row := s.db.QueryRow(`SELECT id, url, method, timeout, COALESCE(last_elapsed_ms, 0), COALESCE(last_status, 0), last_checked FROM latency_monitors WHERE id = ?`, id)
 	r := &MonitorRow{}
 	err := row.Scan(&r.ID, &r.URL, &r.Method, &r.Timeout, &r.LastElapsedMs, &r.LastStatus, &r.LastChecked)
 	if err == sql.ErrNoRows {
@@ -182,7 +183,7 @@ func (s *Store) GetMonitor(id string) (*MonitorRow, error) {
 }
 
 func (s *Store) GetAllMonitors() ([]MonitorRow, error) {
-	rows, err := s.db.Query(`SELECT id, url, method, timeout FROM latency_monitors`)
+	rows, err := s.db.Query(`SELECT id, url, method, timeout, COALESCE(last_elapsed_ms, 0), COALESCE(last_status, 0), last_checked FROM latency_monitors ORDER BY last_checked DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +191,7 @@ func (s *Store) GetAllMonitors() ([]MonitorRow, error) {
 	var results []MonitorRow
 	for rows.Next() {
 		var r MonitorRow
-		if err := rows.Scan(&r.ID, &r.URL, &r.Method, &r.Timeout); err != nil {
+		if err := rows.Scan(&r.ID, &r.URL, &r.Method, &r.Timeout, &r.LastElapsedMs, &r.LastStatus, &r.LastChecked); err != nil {
 			return nil, err
 		}
 		results = append(results, r)
@@ -273,4 +274,105 @@ type MetricRow struct {
 func (s *Store) GetAdminToken() string {
 	// In production, this would come from config/env
 	return "admin-change-me"
+}
+
+// --- UI helper methods ---
+
+type DashboardSummary struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Width           int    `json:"width"`
+	Height          int    `json:"height"`
+	RefreshInterval int    `json:"refresh_interval"`
+	WidgetCount     int    `json:"widget_count"`
+	CreatedAt       int64  `json:"created_at"`
+}
+
+func (s *Store) ListDashboards() ([]DashboardSummary, error) {
+	rows, err := s.db.Query(`SELECT id, name, json_definition, width, height, refresh_interval, created_at FROM dashboards ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []DashboardSummary
+	for rows.Next() {
+		var d DashboardSummary
+		var jsonDef string
+		if err := rows.Scan(&d.ID, &d.Name, &jsonDef, &d.Width, &d.Height, &d.RefreshInterval, &d.CreatedAt); err != nil {
+			return nil, err
+		}
+		var widgets []interface{}
+		json.Unmarshal([]byte(jsonDef), &widgets)
+		d.WidgetCount = len(widgets)
+		results = append(results, d)
+	}
+	return results, nil
+}
+
+type DeviceSummary struct {
+	DeviceID   string  `json:"device_id"`
+	DashboardID *string `json:"dashboard_id"`
+	CreatedAt  int64   `json:"created_at"`
+}
+
+func (s *Store) ListDevices() ([]DeviceSummary, error) {
+	rows, err := s.db.Query(`SELECT device_id, dashboard_id, created_at FROM devices ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []DeviceSummary
+	for rows.Next() {
+		var d DeviceSummary
+		if err := rows.Scan(&d.DeviceID, &d.DashboardID, &d.CreatedAt); err != nil {
+			return nil, err
+		}
+		results = append(results, d)
+	}
+	return results, nil
+}
+
+func (s *Store) DeleteDevice(deviceID string) error {
+	_, err := s.db.Exec(`DELETE FROM devices WHERE device_id = ?`, deviceID)
+	return err
+}
+
+func (s *Store) AssignDeviceDashboard(deviceID, dashboardID string) error {
+	_, err := s.db.Exec(`UPDATE devices SET dashboard_id = ? WHERE device_id = ?`, dashboardID, deviceID)
+	return err
+}
+
+type MonitorSummary struct {
+	ID            string `json:"id"`
+	URL           string `json:"url"`
+	Method        string `json:"method"`
+	Timeout       int    `json:"timeout"`
+	LastElapsedMs int64  `json:"last_elapsed_ms"`
+	LastStatus    int64  `json:"last_status"`
+	LastChecked   int64  `json:"last_checked"`
+}
+
+func (s *Store) ListMonitors() ([]MonitorSummary, error) {
+	rows, err := s.db.Query(`SELECT id, url, method, timeout, last_elapsed_ms, last_status, last_checked FROM latency_monitors ORDER BY last_checked DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []MonitorSummary
+	for rows.Next() {
+		var m MonitorSummary
+		if err := rows.Scan(&m.ID, &m.URL, &m.Method, &m.Timeout, &m.LastElapsedMs, &m.LastStatus, &m.LastChecked); err != nil {
+			return nil, err
+		}
+		results = append(results, m)
+	}
+	return results, nil
+}
+
+func (s *Store) DeleteMonitor(id string) error {
+	_, err := s.db.Exec(`DELETE FROM latency_monitors WHERE id = ?`, id)
+	return err
 }

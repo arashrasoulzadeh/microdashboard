@@ -80,7 +80,7 @@ func (m *Monitor) checkOne(id, url, method string, timeout int) *CheckResult {
 		}
 	}
 
-	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
+	client := &http.Client{Timeout: time.Duration(timeout) * time.Millisecond}
 	resp, err := client.Do(req)
 	elapsed := time.Since(start).Milliseconds()
 
