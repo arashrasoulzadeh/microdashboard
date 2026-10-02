@@ -18,22 +18,22 @@ type CheckResult struct {
 }
 
 type Monitor struct {
-	store    *store.Store
-	interval time.Duration
+	Store    *store.Store
+	Interval time.Duration
 	stopChan chan struct{}
 }
 
 func Start(s *store.Store) {
 	m := &Monitor{
-		store:    s,
-		interval: 30 * time.Second,
+		Store:    s,
+		Interval: 30 * time.Second,
 		stopChan: make(chan struct{}),
 	}
 	go m.run()
 }
 
 func (m *Monitor) run() {
-	ticker := time.NewTicker(m.interval)
+	ticker := time.NewTicker(m.Interval)
 	defer ticker.Stop()
 
 	for {
@@ -47,17 +47,17 @@ func (m *Monitor) run() {
 }
 
 func (m *Monitor) checkAll() {
-	rows, err := m.store.GetAllMonitors()
+	rows, err := m.Store.GetAllMonitors()
 	if err != nil {
 		log.Printf("failed to query monitors: %v", err)
 		return
 	}
 
 	for _, mon := range rows {
-		result := m.checkOne(mon.ID, mon.URL, mon.Method, mon.Timeout)
-		m.store.InsertMetric("", result.ID, int(result.ElapsedMs), result.Status, result.BodyBytes)
+		result := m.CheckOne(mon.ID, mon.URL, mon.Method, mon.Timeout)
+		m.Store.InsertMetric("", result.ID, int(result.ElapsedMs), result.Status, result.BodyBytes)
 		if result.Error == nil {
-			m.store.UpdateMonitorResult(result.ID, result.ElapsedMs, result.Status)
+			m.Store.UpdateMonitorResult(result.ID, result.ElapsedMs, result.Status)
 		}
 
 		if result.Error != nil {
@@ -66,6 +66,10 @@ func (m *Monitor) checkAll() {
 			log.Printf("monitor %s: elapsed=%dms status=%d", result.ID, result.ElapsedMs, result.Status)
 		}
 	}
+}
+
+func (m *Monitor) CheckOne(id, url, method string, timeout int) *CheckResult {
+	return m.checkOne(id, url, method, timeout)
 }
 
 func (m *Monitor) checkOne(id, url, method string, timeout int) *CheckResult {

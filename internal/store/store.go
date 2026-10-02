@@ -24,6 +24,12 @@ func (s *Store) Close() {
 	s.db.Close()
 }
 
+// DB returns the underlying database connection for testing.
+// This is only for testing purposes.
+func (s *Store) DB() *sql.DB {
+	return s.db
+}
+
 func (s *Store) Migrate() error {
 	const queryDevices = `CREATE TABLE IF NOT EXISTS devices (
 		device_id TEXT PRIMARY KEY,
