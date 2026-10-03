@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// Start latency monitor checker in background
-	go monitor.Start(st)
+	_ = monitor.Start(st)
 
 	// Setup router
 	router := httprouter.New()

@@ -1,0 +1,13 @@
+mode: set
+microdashboard/internal/auth/auth.go:15.32,17.2 1 1
+microdashboard/internal/auth/auth.go:19.60,20.75 1 1
+microdashboard/internal/auth/auth.go:20.75,22.16 2 1
+microdashboard/internal/auth/auth.go:22.16,25.4 2 1
+microdashboard/internal/auth/auth.go:27.3,28.17 2 1
+microdashboard/internal/auth/auth.go:28.17,31.4 2 1
+microdashboard/internal/auth/auth.go:33.3,34.30 2 1
+microdashboard/internal/auth/auth.go:38.61,39.75 1 1
+microdashboard/internal/auth/auth.go:39.75,41.39 2 1
+microdashboard/internal/auth/auth.go:41.39,44.4 2 1
+microdashboard/internal/auth/auth.go:45.3,45.13 1 1
+microdashboard/internal/auth/auth.go:49.66,52.2 2 1
