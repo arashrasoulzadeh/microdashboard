@@ -361,7 +361,7 @@ type MonitorSummary struct {
 }
 
 func (s *Store) ListMonitors() ([]MonitorSummary, error) {
-	rows, err := s.db.Query(`SELECT id, url, method, timeout, last_elapsed_ms, last_status, last_checked FROM latency_monitors ORDER BY last_checked DESC`)
+	rows, err := s.db.Query(`SELECT id, url, method, timeout, COALESCE(last_elapsed_ms, 0), COALESCE(last_status, 0), last_checked FROM latency_monitors ORDER BY last_checked DESC`)
 	if err != nil {
 		return nil, err
 	}

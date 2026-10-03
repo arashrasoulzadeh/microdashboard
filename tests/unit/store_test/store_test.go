@@ -298,3 +298,26 @@ func TestStore_AssignDeviceDashboard(t *testing.T) {
 		t.Errorf("DashboardID not assigned: %v", d.DashboardID)
 	}
 }
+
+func TestStore_GetAllMonitors(t *testing.T) {
+	s := setupTestDB(t)
+
+	s.UpsertMonitor("mon1", "http://example.com/1", "GET", 5000)
+	s.UpsertMonitor("mon2", "http://example.com/2", "POST", 3000)
+
+	monitors, err := s.GetAllMonitors()
+	if err != nil {
+		t.Fatalf("GetAllMonitors failed: %v", err)
+	}
+	if len(monitors) != 2 {
+		t.Errorf("GetAllMonitors count = %d, want 2", len(monitors))
+	}
+	// Just verify both monitors are returned
+	ids := map[string]bool{}
+	for _, m := range monitors {
+		ids[m.ID] = true
+	}
+	if !ids["mon1"] || !ids["mon2"] {
+		t.Errorf("Missing monitor IDs, got: %v", ids)
+	}
+}

@@ -23,13 +23,14 @@ type Monitor struct {
 	stopChan chan struct{}
 }
 
-func Start(s *store.Store) {
+func Start(s *store.Store) *Monitor {
 	m := &Monitor{
 		Store:    s,
 		Interval: 30 * time.Second,
 		stopChan: make(chan struct{}),
 	}
 	go m.run()
+	return m
 }
 
 func (m *Monitor) run() {
@@ -39,11 +40,22 @@ func (m *Monitor) run() {
 	for {
 		select {
 		case <-ticker.C:
-			m.checkAll()
+			m.CheckAll()
 		case <-m.stopChan:
 			return
 		}
 	}
+}
+
+// Stop stops the monitor gracefully.
+func (m *Monitor) Stop() {
+	close(m.stopChan)
+}
+
+// CheckAll runs a single check cycle for all monitors.
+// Exported for testing.
+func (m *Monitor) CheckAll() {
+	m.checkAll()
 }
 
 func (m *Monitor) checkAll() {

@@ -265,3 +265,31 @@ func TestRender_MultiplePlaceholders(t *testing.T) {
 		t.Errorf("Text = %q", w.Text)
 	}
 }
+
+func TestRender_MetricExpression(t *testing.T) {
+	s := setupTestStoreHelper(t)
+
+	d := &dashboard.Dashboard{
+		ID:   "dash1",
+		Name: "Test",
+		Widgets: []dashboard.Widget{
+			{ID: "w1", Type: "numeric", Expression: "${metric:dev1.elapsed_ms}", Unit: "ms"},
+		},
+	}
+
+	rendered, err := dashboard.Render(d, s)
+	if err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+
+	w := rendered.Widgets[0]
+	if w.Value != 200.0 {
+		t.Errorf("Value = %v, want 200", w.Value)
+	}
+	if w.Text != "200ms" {
+		t.Errorf("Text = %q, want %q", w.Text, "200ms")
+	}
+	if w.Status != "ok" {
+		t.Errorf("Status = %q, want ok", w.Status)
+	}
+}

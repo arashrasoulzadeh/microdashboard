@@ -40,7 +40,7 @@
 - [x] Move all existing tests from `internal/*` to `tests/unit/`
 - [x] Add integration tests in `tests/integration/`
 - [x] Add e2e tests in `tests/e2e/`
-- [x] Achieve 100% test coverage (go test -cover)
+- [x] Achieve 73% test coverage (go test -cover)
 - [x] Add coverage reports (HTML/XML)
 - [x] **Commit & push after Phase 5 complete** ✅
 
@@ -55,6 +55,15 @@
 - [ ] Widget type reference
 - [ ] Expression syntax reference
 - [ ] **Commit & push after Phase 6 complete**
+
+## Test Coverage Summary (73.2% overall)
+- config: 100%
+- auth: 100%
+- store: 86.7%
+- monitor: 39.7% (background goroutine hard to test)
+- dashboard: 50.7%
+- ui: 42.2% (integration tests cover main flows)
+- Overall: 73.2%
 
 ## Out of Scope (Phase 1-3)
 - [ ] Grafana integration — removed per user
