@@ -9,6 +9,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"microdashboard/internal/auth"
+	"microdashboard/internal/dashboard"
 	"microdashboard/internal/store"
 )
 
@@ -189,8 +190,22 @@ func apiDashboardRender(st *store.Store) httprouter.Handle {
 			http.Error(w, "not found", 404)
 			return
 		}
+		var dash dashboard.Dashboard
+		dash.ID = d.ID
+		dash.Name = d.Name
+		dash.Width = d.Width
+		dash.Height = d.Height
+		dash.RefreshInterval = d.RefreshInterval
+		dash.CreatedAt = d.CreatedAt
+		json.Unmarshal([]byte(d.JSONDef), &dash.Widgets)
+
+		rendered, err := dashboard.Render(&dash, st)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(d.JSONDef))
+		json.NewEncoder(w).Encode(rendered)
 	}
 }
 
