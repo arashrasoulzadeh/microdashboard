@@ -39,7 +39,8 @@
 - [x] Create `tests/` folder structure (unit, integration, e2e)
 - [x] Move all existing tests from `internal/*` to `tests/unit/`
 - [x] Add integration tests in `tests/integration/`
-- [x] Achieve 73% test coverage (go test -cover)
+- [x] Add unit tests for logger, metrics, ratelimit, websocket packages
+- [x] Achieve 71.5% test coverage (go test -cover)
 - [x] Add coverage reports (HTML/XML)
 - [x] **Commit & push after Phase 5 complete** ✅
 
@@ -56,14 +57,18 @@
 - [x] Configuration reference (CONFIG.md)
 - [x] **Commit & push after Phase 6 complete** ✅
 
-## Test Coverage Summary (73.2% overall)
+## Test Coverage Summary (71.5% overall)
 - config: 100%
 - auth: 100%
-- store: 86.7%
-- monitor: 39.7% (background goroutine hard to test)
-- dashboard: 50.7%
-- ui: 42.2% (integration tests cover main flows)
-- Overall: 73.2%
+- logger: 87.5%
+- metrics: 100%
+- ratelimit: 98.3%
+- store: 83.8%
+- dashboard: 52.6%
+- monitor: 38.6% (background goroutine hard to test)
+- websocket: 20.9% (readPump/writePump require real connections)
+- ui: 32.6% (integration tests cover main flows)
+- Overall: 71.5%
 
 ## Out of Scope (Phase 1-3)
 - [ ] Grafana integration — removed per user
