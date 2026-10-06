@@ -174,3 +174,46 @@ func (c *Client) writePump() {
 		}
 	}
 }
+
+func (c *Client) SendForTest(data []byte) {
+	select {
+	case c.send <- data:
+	default:
+	}
+}
+
+func (c *Client) DashboardID() string {
+	return c.dashboardID
+}
+
+func (c *Client) ReadPumpForTest() {
+	if c.conn == nil {
+		return
+	}
+	c.conn.SetReadLimit(512)
+	for {
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		var msg map[string]interface{}
+		if err := json.Unmarshal(message, &msg); err != nil {
+			continue
+		}
+
+		if msgType, ok := msg["type"].(string); ok && msgType == "subscribe" {
+			if dashID, ok := msg["dashboard_id"].(string); ok {
+				c.dashboardID = dashID
+			}
+		}
+	}
+}
+
+func NewClientForTest(hub *Hub, device *store.DeviceRow) *Client {
+	return &Client{
+		hub:    hub,
+		send:   make(chan []byte, 256),
+		device: device,
+	}
+}

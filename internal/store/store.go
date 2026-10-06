@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -28,6 +29,18 @@ func (s *Store) Close() {
 // This is only for testing purposes.
 func (s *Store) DB() *sql.DB {
 	return s.db
+}
+
+// CreateTempDB creates a temporary database file for testing.
+// Returns the path to the temp file.
+// Caller is responsible for cleaning up the file.
+func CreateTempDB(t interface{ Fatalf(string, ...interface{}) }) string {
+	tmpfile, err := os.CreateTemp("", "test_*.db")
+	if err != nil {
+		t.Fatalf("failed to create temp db: %v", err)
+	}
+	tmpfile.Close()
+	return tmpfile.Name()
 }
 
 func (s *Store) Migrate() error {

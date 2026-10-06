@@ -293,3 +293,120 @@ func TestRender_MetricExpression(t *testing.T) {
 		t.Errorf("Status = %q, want ok", w.Status)
 	}
 }
+
+func TestRender_MetricExpression_NoData(t *testing.T) {
+	s := setupTestStoreHelper(t)
+
+	d := &dashboard.Dashboard{
+		ID:   "dash1",
+		Name: "Test",
+		Widgets: []dashboard.Widget{
+			{ID: "w1", Type: "numeric", Expression: "${metric:nonexistent.temp}", Unit: "°C"},
+		},
+	}
+
+	rendered, err := dashboard.Render(d, s)
+	if err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+
+	w := rendered.Widgets[0]
+	if w.Status != "warn" {
+		t.Errorf("Status = %q, want warn", w.Status)
+	}
+	if w.Text != "no data" {
+		t.Errorf("Text = %q, want %q", w.Text, "no data")
+	}
+}
+
+func TestRender_MetricExpression_InvalidFormat(t *testing.T) {
+	s := setupTestStoreHelper(t)
+
+	d := &dashboard.Dashboard{
+		ID:   "dash1",
+		Name: "Test",
+		Widgets: []dashboard.Widget{
+			{ID: "w1", Type: "numeric", Expression: "${metric:invalid_format}", Unit: "ms"},
+		},
+	}
+
+	rendered, err := dashboard.Render(d, s)
+	if err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+
+	w := rendered.Widgets[0]
+	if w.Status != "crit" {
+		t.Errorf("Status = %q, want crit", w.Status)
+	}
+	if len(w.Text) < 4 || w.Text[:4] != "ERR:" {
+		t.Errorf("Error text = %q", w.Text)
+	}
+}
+
+func TestRender_LatencyStatusCodes(t *testing.T) {
+	s := setupTestStoreHelper(t)
+
+	tests := []struct {
+		status      int
+		wantStatus  string
+		description string
+	}{
+		{200, "ok", "2xx"},
+		{301, "ok", "3xx"},
+		{400, "warn", "4xx"},
+		{404, "warn", "404"},
+		{500, "crit", "5xx"},
+		{502, "crit", "502"},
+		{0, "warn", "network error"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			s.UpdateMonitorResult("mon1", 100, tt.status)
+
+			d := &dashboard.Dashboard{
+				ID:   "dash1",
+				Name: "Test",
+				Widgets: []dashboard.Widget{
+					{ID: "w1", Type: "gauge", Expression: "${latency:mon1}", Unit: "ms"},
+				},
+			}
+
+			rendered, err := dashboard.Render(d, s)
+			if err != nil {
+				t.Fatalf("Render failed: %v", err)
+			}
+
+			w := rendered.Widgets[0]
+			if w.Status != tt.wantStatus {
+				t.Errorf("Status = %q, want %q for HTTP %d", w.Status, tt.wantStatus, tt.status)
+			}
+		})
+	}
+}
+
+func TestValidateDashboard_WidgetDefaults(t *testing.T) {
+	d := &dashboard.Dashboard{
+		ID:   "dash1",
+		Name: "Test",
+		Widgets: []dashboard.Widget{
+			{ID: "w1", Type: "gauge", Expression: "${latency:mon1}"},
+		},
+	}
+
+	err := dashboard.ValidateDashboard(d)
+	if err != nil {
+		t.Fatalf("ValidateDashboard failed: %v", err)
+	}
+
+	if d.Width != 128 {
+		t.Errorf("Width default = %d, want 128", d.Width)
+	}
+	if d.Height != 64 {
+		t.Errorf("Height default = %d, want 64", d.Height)
+	}
+	if d.RefreshInterval != 15000 {
+		t.Errorf("RefreshInterval default = %d, want 15000", d.RefreshInterval)
+	}
+}

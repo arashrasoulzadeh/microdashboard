@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"os"
@@ -28,6 +29,10 @@ func NewLogger(level Level) *Logger {
 		logger: log.New(os.Stdout, "", 0),
 		level:  level,
 	}
+}
+
+func (l *Logger) SetOutput(w *bytes.Buffer) {
+	l.logger.SetOutput(w)
 }
 
 func (l *Logger) log(level Level, msg string, fields Fields) {

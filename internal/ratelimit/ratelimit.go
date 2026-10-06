@@ -93,6 +93,11 @@ func getClientIP(r *http.Request) string {
 	return ip
 }
 
+// GetClientIPForTest exposes getClientIP for testing
+func GetClientIPForTest(r *http.Request) string {
+	return getClientIP(r)
+}
+
 // DeviceRateLimiter limits based on device API key
 type DeviceRateLimiter struct {
 	devices map[string]*rate.Limiter
